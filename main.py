@@ -88,7 +88,7 @@ def create_model(vocab_size, seq_length):
     return model
 
 # Fonction pour entraîner le modèle
-def train_model(model, train_dataset, val_dataset):
+def train_model(model, train_dataset, val_dataset, epochs, batch_size):
     callbacks = [
         EarlyStopping(patience=5, restore_best_weights=True),
         ModelCheckpoint('best_generator.h5', save_best_only=True)
@@ -96,7 +96,8 @@ def train_model(model, train_dataset, val_dataset):
 
     history = model.fit(
         train_dataset,
-        epochs=4,
+        epochs=epochs,
+        batch_size=batch_size,
         validation_data=val_dataset,
         callbacks=callbacks
     )
@@ -144,13 +145,15 @@ def main():
     parser.add_argument('--temperature', type=float, default=1.0, help='Température pour le sampling')
     parser.add_argument('--top_k', type=int, default=10, help='Top-k pour le sampling')
     parser.add_argument('--model_path', type=str, default='best_generator.h5', help='Chemin vers le modèle sauvegardé')
+    parser.add_argument('--epochs', type=int, default=4, help='Nombre d\'époques d\'entraînement')
+    parser.add_argument('--batch_size', type=int, default=128, help='Taille des lots d\'entraînement')
 
     args = parser.parse_args()
 
     if args.train:
         train_dataset, val_dataset, vocab_size, seq_length, char2idx, idx2char, text = prepare_data()
         model = create_model(vocab_size, seq_length)
-        model = train_model(model, train_dataset, val_dataset)
+        model = train_model(model, train_dataset, val_dataset, args.epochs, args.batch_size)
         model.save(args.model_path)
     elif args.generate:
         model = load_model(args.model_path)
